@@ -26,6 +26,73 @@ StJetAnalysis::~StJetAnalysis()
 
 
 //------------------------------------------------------------------------------------------------------------------
+vector<Double_t>  StJetAnalysis::Get_Helix_params_from_kine(TLorentzVector TLV_particle, TVector3 TV3_vertex, Double_t charge)
+{
+    // Returns helix parameters from kinematic input, Lorentz vector and vertex + charge
+
+    Double_t x[3];
+    Double_t p[3];
+    x[0] = TV3_vertex.X();
+    x[1] = TV3_vertex.Y();
+    x[2] = TV3_vertex.Z();
+    p[0] = TLV_particle.Px();
+    p[1] = TLV_particle.Py();
+    p[2] = TLV_particle.Pz();
+    //calculation of Helixparameter taken from http://alidoc.cern.ch/AliRoot/v5-09-36/_ali_helix_8cxx_source.html
+    //AliHelix::AliHelix(Double_t x[3], Double_t p[3], Double_t charge, Double_t conversion)
+    vector<Double_t> fHelix;
+    fHelix.resize(8);
+    Double_t pt = TMath::Sqrt(p[0] * p[0] + p[1] * p[1]);
+    //
+
+    Double_t b_field	=	0.5;
+    Double_t b_fak = b_field * 3. / 1000.;
+
+    Double_t curvature = ((charge/pt) * b_fak);
+
+    fHelix[4] = curvature; // C
+    fHelix[3] = p[2] / pt; // tgl
+    //
+    Double_t xc, yc, rc;
+    rc = 1 / fHelix[4];
+    xc = x[0] - rc * p[1] / pt;
+    yc = x[1] + rc * p[0] / pt;
+    //
+    fHelix[5] = x[0]; // x0
+    fHelix[0] = x[1]; // y0
+    fHelix[1] = x[2]; // z0
+    //
+    //fHelix[6] = xc;
+    //fHelix[7] = yc;
+    //fHelix[8] = TMath::Abs(rc);
+    //
+    fHelix[5] = xc;
+    fHelix[0] = yc;
+
+    fHelix[6] = pt;
+    fHelix[7] = p[2];
+    //
+    if(TMath::Abs(p[1]) < TMath::Abs(p[0]))
+    {
+        fHelix[2] = TMath::ASin(p[1] / pt);
+        //Helix[2]=asinf(p[1]/pt);
+        if (charge * yc < charge * x[1])
+            fHelix[2] = TMath::Pi() - fHelix[2];
+    } else
+    {
+        fHelix[2] = TMath::ACos(p[0] / pt);
+        //fHelix[2]=acosf(p[0]/pt);
+        if (charge * xc > charge * x[0])
+            fHelix[2] = -fHelix[2];
+    }
+
+    return fHelix;
+}
+//------------------------------------------------------------------------------------------------------------------
+
+
+
+//------------------------------------------------------------------------------------------------------------------
 void  StJetAnalysis::Init3DGraphics()
 {
     TEveManager::Create();
@@ -51,7 +118,7 @@ void  StJetAnalysis::Init3DGraphics()
     //h_good_bad_TRD_chambers = (TH1D*)file_TRD_QA ->Get("all_defects_hist");
 
     TH1I* h_good_bad_TRD_chambers = new TH1I("h_good_bad_TRD_chambers","h_good_bad_TRD_chambers",540,0,540);
-    TFile* file_TRD_QA_flags = TFile::Open("/home/ceres/schmah/ALICE/TRD_self_tracking/Data/chamber_QC_flags.root");
+    TFile* file_TRD_QA_flags = TFile::Open(GeomDir+"/chamber_QC_flags.root");
     vector<int> *t_flags;
     file_TRD_QA_flags ->GetObject("QC_flags", t_flags);
 
@@ -77,7 +144,7 @@ void  StJetAnalysis::Init3DGraphics()
 
     //--------------------------
     // Load TRD geometry
-    TFile* file_TRD_geom = TFile::Open("/home/ceres/schmah/ALICE/TRD_self_tracking/Data/TRD_Geom.root");
+    TFile* file_TRD_geom = TFile::Open(GeomDir+"TRD_Geom.root");
     vec_TH1D_TRD_geometry.resize(3); // x,y,z
     for(Int_t i_xyz = 0; i_xyz < 3; i_xyz++)
     {
@@ -489,6 +556,7 @@ void StJetAnalysis::MakeJets()
     JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd); // <--
     //JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def, area_def); // test
     //cout << "Define Subtractor" << endl;
+
     Subtractor subtractor(&bkgd_estimator);
     //cout << "Define bkgd_estimator" << endl;
     bkgd_estimator.set_particles(vec_PJ_particles);
@@ -517,6 +585,7 @@ void StJetAnalysis::MakeJets()
             Float_t jet_eta    = jets_fiducial[0][i_jet].eta();
             Float_t jet_phi    = jets_fiducial[0][i_jet].phi();
 
+            printf("i_jet: %d, jet_pt: %4.3f, jet_area: %4.3f, jet_eta: %4.3f, jet_phi: %4.3f \n",i_jet,jet_pt,jet_area,jet_eta,jet_phi);
             h_jet_sub ->Fill(jet_pt_sub);
         }
     }
@@ -530,7 +599,7 @@ void StJetAnalysis::MakeJets()
 
 
 //------------------------------------------------------------------------------------------------------------------
-Int_t StJetAnalysis::LoopEvent(Int_t iEvent)
+Int_t StJetAnalysis::LoopEvent(Int_t iEvent, Int_t graphics)
 {
     Int_t i_SE_ME = 0;
 
@@ -556,6 +625,9 @@ Int_t StJetAnalysis::LoopEvent(Int_t iEvent)
     TVector2 QvecEtaPos     = JetTrackEvent->getQvecEtaPos();
     TVector2 QvecEtaNeg     = JetTrackEvent->getQvecEtaNeg();
     Int_t    cent9          = JetTrackEvent->getcent9();
+
+    TVector3 TV3_prim_vertex(prim_vertex_x,prim_vertex_y,prim_vertex_z);
+    printf("N_Particles: %d \n",N_Particles);
     //--------------------
 
 
@@ -586,6 +658,8 @@ Int_t StJetAnalysis::LoopEvent(Int_t iEvent)
     //--------------------
     // Loop over EMCal information
     Float_t pos_EMCal_clus[3] = {0.0};
+    vec_eve_EMCal_cluster.clear();
+    vec_eve_EMCal_cluster.resize(N_EMCal);
     for(Int_t i_EMCal = 0; i_EMCal < N_EMCal; i_EMCal++)
     {
         // Particle information
@@ -595,12 +669,54 @@ Int_t StJetAnalysis::LoopEvent(Int_t iEvent)
         {
             pos_EMCal_clus[i_xyz] = JetEMCalParticle->get_cluster_pos(i_xyz);
         }
+
+        TVector3 TV3_EMCal_cluster(pos_EMCal_clus[0],pos_EMCal_clus[1],pos_EMCal_clus[2]);
+        TVector3 TV3_EMCal_cluster_dir(pos_EMCal_clus[0],pos_EMCal_clus[1],pos_EMCal_clus[2]);
+        TV3_EMCal_cluster_dir *= 1.0/TV3_EMCal_cluster_dir.Mag();
+        TVector3 TV3_EMCal_perpA = TV3_prim_vertex.Cross(TV3_EMCal_cluster_dir);
+        TV3_EMCal_perpA *= 1.0/TV3_EMCal_perpA.Mag();
+        TVector3 TV3_EMCal_perpB = TV3_EMCal_cluster_dir.Cross(TV3_EMCal_perpA);
+        TV3_EMCal_perpB *= 1.0/TV3_EMCal_perpB.Mag();
+
         Float_t    Dx_to_track        = JetEMCalParticle->get_Dx_to_track();
         Float_t    Dz_to_track        = JetEMCalParticle->get_Dz_to_track();
         UShort_t   N_cells_in_cluster = JetEMCalParticle->get_N_cells_in_cluster();
         Bool_t     isExotic           = JetEMCalParticle->get_isExotic();
 
         printf("i_EMCal: %d, N_cells_in_cluster: %d, energy: %4.3f \n",i_EMCal,(Int_t)N_cells_in_cluster,TLV_EMCal.E());
+
+
+        if(graphics)
+        {
+            vec_eve_EMCal_cluster[i_EMCal] = new TEveBox;
+
+            HistName = "EMCal_cluster_";
+            HistName += i_EMCal;
+            vec_eve_EMCal_cluster[i_EMCal] ->SetName(HistName.Data());
+            vec_eve_EMCal_cluster[i_EMCal] ->SetMainColor(kRed);
+            vec_eve_EMCal_cluster[i_EMCal] ->SetMainTransparency(65); // the higher the value the more transparent
+
+            TVector3 TV3_vertex[8];
+            Double_t cluster_energy_factor = TMath::Power(TLV_EMCal.E(),0.5)*10.0;
+            Double_t cluster_width_factor = 5.0;
+            TV3_vertex[0] = TV3_EMCal_cluster + cluster_width_factor*TV3_EMCal_perpA;
+            TV3_vertex[1] = TV3_EMCal_cluster + cluster_width_factor*TV3_EMCal_perpA + cluster_width_factor*TV3_EMCal_perpB;
+            TV3_vertex[2] = TV3_EMCal_cluster - cluster_width_factor*TV3_EMCal_perpA + cluster_width_factor*TV3_EMCal_perpB;
+            TV3_vertex[3] = TV3_EMCal_cluster - cluster_width_factor*TV3_EMCal_perpA;
+            TV3_vertex[4] = TV3_EMCal_cluster + cluster_width_factor*TV3_EMCal_perpA + TV3_EMCal_cluster_dir*cluster_energy_factor;
+            TV3_vertex[5] = TV3_EMCal_cluster + cluster_width_factor*TV3_EMCal_perpA + cluster_width_factor*TV3_EMCal_perpB   + TV3_EMCal_cluster_dir*cluster_energy_factor;
+            TV3_vertex[6] = TV3_EMCal_cluster - cluster_width_factor*TV3_EMCal_perpA + cluster_width_factor*TV3_EMCal_perpB   + TV3_EMCal_cluster_dir*cluster_energy_factor;
+            TV3_vertex[7] = TV3_EMCal_cluster - cluster_width_factor*TV3_EMCal_perpA + TV3_EMCal_cluster_dir*cluster_energy_factor;
+
+            for(Int_t i_vertex = 0; i_vertex < 8; i_vertex++)
+            {
+                Double_t arr_pos_glb[3] = {TV3_vertex[i_vertex][0],TV3_vertex[i_vertex][1],TV3_vertex[i_vertex][2]};
+                printf("   i_vertex: %d, pos: {%4.3f, %4.3f, %4.3f} \n",i_vertex,TV3_vertex[i_vertex][0],TV3_vertex[i_vertex][1],TV3_vertex[i_vertex][2]);
+                vec_eve_EMCal_cluster[i_EMCal]->SetVertex(i_vertex,arr_pos_glb[0],arr_pos_glb[1],arr_pos_glb[2]);
+            }
+
+            gEve->AddElement(vec_eve_EMCal_cluster[i_EMCal]);
+        }
     }
     //--------------------
 
@@ -608,6 +724,8 @@ Int_t StJetAnalysis::LoopEvent(Int_t iEvent)
 
     //printf("N_Particles: %d \n",N_Particles);
     MakeJets();
+
+    if(graphics) gEve->Redraw3D(kTRUE);
 
     return 1;
 }

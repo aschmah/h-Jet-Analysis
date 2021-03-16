@@ -60,10 +60,10 @@
 
 using namespace std;
 
-#include "/home/ceres/schmah/ALICE/Jet_Analysis/StJetTrackEventLinkDef.h"
-#include "/home/ceres/schmah/ALICE/Jet_Analysis/StJetTrackEvent.h"
-//#include "../StJetTrackEvent.h"
-//#include "../StJetTrackEventLinkDef.h"
+//#include "/home/ceres/schmah/ALICE/Jet_Analysis/StJetTrackEventLinkDef.h"
+//#include "/home/ceres/schmah/ALICE/Jet_Analysis/StJetTrackEvent.h"
+#include "../StJetTrackEvent.h"
+#include "../StJetTrackEventLinkDef.h"
 
 ClassImp(StEMCal)
 ClassImp(StJetTrackParticle)
@@ -80,10 +80,12 @@ ClassImp(StJetTrackEvent)
 #include "fastjet/Selector.hh"
 #include "fastjet/tools/Subtractor.hh"
 
+
 //#include "StPhysicalHelixD.hh" // ALEX
 
-using namespace std;
 using namespace fastjet;
+using namespace std;
+
 
 #include "fastjet/tools/JetMedianBackgroundEstimator.hh"
 
@@ -120,6 +122,8 @@ public:
 
 
 
+    vector<Double_t> Get_Helix_params_from_kine(TLorentzVector TLV_particle, TVector3 TV3_vertex, Double_t charge);
+    void  setGeomDir(TString iGeomDir) {GeomDir = iGeomDir;};
     void  setInListDir(TString iInListDir) {InListDir = iInListDir;};
     void  setSEList(TString iSEList) {SEList = iSEList;};
     void  setInputDir(TString ipinputdir) {pinputdir = ipinputdir;};
@@ -148,7 +152,7 @@ public:
     void  set_N_vertex_mult_Psi_bins(Int_t N_z_vertex_bins_set, Int_t N_mult_bins_set, Int_t N_Psi_bins_set) {N_z_vertex_bins = N_z_vertex_bins_set; N_mult_bins = N_mult_bins_set; N_Psi_bins = N_Psi_bins_set;};
     void  SplitTrees();
     void  MakeJets();
-    Int_t LoopEvent(Int_t LoopEvent);
+    Int_t LoopEvent(Int_t LoopEvent, Int_t graphics);
 
     //----------------------------------------------------------------------
     // Function for track reconstruction efficiency
@@ -185,7 +189,7 @@ private:
     vector<PseudoJet> vec_PJ_particles;
     Int_t eflab_prim_glob, eRem_n_hardest;
     Double_t eJet_R, eBkg_R, emax_pt_down_scale;
-    TString eSuffix, InListDir;
+    TString eSuffix, InListDir, GeomDir;
     Double_t ePYTHIA_eff_factor;
     Int_t ez_bin, emult_bin, ePsi_bin, eCentrality;
     TString eOutdir, eSampleHist, eSE_Et_Hist, eME_Et_Hist;
@@ -230,6 +234,7 @@ private:
     vector<TEveLine*> vec_TPL3D_helix_inner;
     vector<TEveLine*> vec_TPL3D_helix_hull;
     vector<TEveBox*> vec_eve_TRD_detector_box;
+    vector<TEveBox*> vec_eve_EMCal_cluster;
     //----------------------------------------------------------------------
 
 

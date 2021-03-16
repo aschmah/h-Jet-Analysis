@@ -2,13 +2,18 @@
 
 R__LOAD_LIBRARY(StJetAnalysis_cxx.so);
 
-void JetAnalysis_Macro(TString suffix, Int_t BeamTime_num, Int_t Random_par,
+void JetAnalysis_Macro(Int_t event_plot, TString suffix, Int_t BeamTime_num, Int_t Random_par,
                        Int_t Mode, Int_t In_Mode, Int_t z_bin, Int_t mult_bin, Int_t Psi_bin,
                        TString infilelist, Double_t PYTHIA_eff_factor, Int_t Centrality,
                        Int_t flab_prim_glob, Double_t Jet_R, Double_t Bkg_R, Int_t Rem_n_hardest, Double_t max_pt_down_scale
                       )
 {
 
+    Int_t iSystem = 0; // 0 = local, 1 = HD
+
+    // First type:
+    // gSystem ->Load("libfastjet.so");
+    // gSystem ->Load("libfastjettools.0.so");
     // .L StJetAnalysis.cxx++
 
     // New tree structure, new parameters
@@ -25,7 +30,8 @@ void JetAnalysis_Macro(TString suffix, Int_t BeamTime_num, Int_t Random_par,
     // root -b -q JetAnalysis_Macro.cc\(0,20000,\"_test\",6,-1,1,2,5,3,0,\"Test_list.txt\",1.0,0,0,0.5,0.3,3,3.0\)
     // .x JetAnalysis_Macro.cc(0,20000,"_test",6,-1,1,2,5,3,0,"Test_list.txt",1.0,0,0,0.5,0.3,3,3.0)
 
-    // .x JetAnalysis_Macro.cc("_test",6,-1,1,2,5,3,0,"PbPb_run0_test.txt",1.0,0,0,0.5,0.3,3,3.0)
+    // New
+    // .x JetAnalysis_Macro.cc(0,"_test",6,-1,1,2,5,3,0,"PbPb_run0_test.txt",1.0,0,0,0.5,0.3,3,3.0)
 
     // Mode
     // 0   = not important
@@ -78,8 +84,17 @@ void JetAnalysis_Macro(TString suffix, Int_t BeamTime_num, Int_t Random_par,
 
     cout << "StJetAnalysis_Macro started" << endl;
 
+    gSystem ->Load("libfastjet.so");
+    gSystem ->Load("libfastjettools.0.so");
     gSystem ->Load("libTree");
-    gSystem ->Load("/home/ceres/schmah/ALICE/Jet_Analysis/JetTree_Analysis/StJetAnalysis_cxx.so");
+    if(iSystem == 0)
+    {
+        gSystem ->Load("StJetAnalysis_cxx.so");
+    }
+    else
+    {
+        gSystem ->Load("/home/ceres/schmah/ALICE/Jet_Analysis/JetTree_Analysis/StJetAnalysis_cxx.so");
+    }
 
     /*
     //gSystem ->Load("/global/homes/a/aschmah/local/lib/libfastjet.so");
@@ -125,20 +140,39 @@ void JetAnalysis_Macro(TString suffix, Int_t BeamTime_num, Int_t Random_par,
 
     //---------------------------------------------------------------
     Int_t beamtime   = 1;
-    Int_t graphics   = 0;
-    Int_t event_plot = -1; // -1 = all events
+    Int_t graphics   = 1;
+    //Int_t event_plot = 0; // -1 = all events
     StJetAnalysis_Ana->set_N_vertex_mult_Psi_bins(2,2,2);
     StJetAnalysis_Ana->setInListDir("File_lists/");
     StJetAnalysis_Ana->setSEList(infilelist.Data());
-    if(beamtime == 0)
+    if(iSystem == 0) // local
     {
-        StJetAnalysis_Ana->setInputDir("/misc/alidata120/alice_u/schmah/Jet_Analysis/pPb_2016/Track_trees/jet_trees_V2/");
-        StJetAnalysis_Ana->setOutdir("/misc/alidata120/alice_u/schmah/Jet_Analysis/pPb_2016/Jet_histos/");
+        if(beamtime == 0)
+        {
+            StJetAnalysis_Ana->setInputDir("./Data/");
+            StJetAnalysis_Ana->setOutdir("./Data/Jet_histos/");
+            StJetAnalysis_Ana->setGeomDir("./Data/");
+        }
+        if(beamtime == 1)
+        {
+            StJetAnalysis_Ana->setInputDir("./Data/");
+            StJetAnalysis_Ana->setOutdir("./Data/Jet_histos/");
+            StJetAnalysis_Ana->setGeomDir("./Data/");
+        }
     }
-    if(beamtime == 1)
+    else // HD
     {
-        StJetAnalysis_Ana->setInputDir("/misc/alidata120/alice_u/schmah/Jet_Analysis/PbPb_2018/Track_trees/jet_trees_V2/");
-        StJetAnalysis_Ana->setOutdir("/misc/alidata120/alice_u/schmah/Jet_Analysis/PbPb_2018/Jet_histos/");
+        StJetAnalysis_Ana->setGeomDir("/home/ceres/schmah/ALICE/TRD_self_tracking/Data/");
+        if(beamtime == 0)
+        {
+            StJetAnalysis_Ana->setInputDir("/misc/alidata120/alice_u/schmah/Jet_Analysis/pPb_2016/Track_trees/jet_trees_V2/");
+            StJetAnalysis_Ana->setOutdir("/misc/alidata120/alice_u/schmah/Jet_Analysis/pPb_2016/Jet_histos/");
+        }
+        if(beamtime == 1)
+        {
+            StJetAnalysis_Ana->setInputDir("/misc/alidata120/alice_u/schmah/Jet_Analysis/PbPb_2018/Track_trees/jet_trees_V2/");
+            StJetAnalysis_Ana->setOutdir("/misc/alidata120/alice_u/schmah/Jet_Analysis/PbPb_2018/Jet_histos/");
+        }
     }
 
 
@@ -179,7 +213,7 @@ void JetAnalysis_Macro(TString suffix, Int_t BeamTime_num, Int_t Random_par,
             }
         }
 
-        return_LoopEvent = StJetAnalysis_Ana->LoopEvent(i_event);
+        return_LoopEvent = StJetAnalysis_Ana->LoopEvent(i_event,graphics);
         if(!return_LoopEvent) break;
     }
     StJetAnalysis_Ana->WriteJet();
