@@ -26,10 +26,12 @@ private:
     Float_t  Dz_to_track;
     UShort_t N_cells_in_cluster;
     Bool_t   isExotic;
+    Bool_t   isPHOS;
+    Bool_t   isEMCal;
 
 public:
     StEMCal() :
-        TLV_EMCal(),cluster_pos(),Dx_to_track(0),Dz_to_track(0),N_cells_in_cluster(0),isExotic(0)
+        TLV_EMCal(),cluster_pos(),Dx_to_track(0),Dz_to_track(0),N_cells_in_cluster(0),isExotic(0),isPHOS(0),isEMCal(0)
     {
 
     }
@@ -45,6 +47,8 @@ public:
         void set_Dz_to_track(Float_t f)                       {Dz_to_track = f;}
         void set_N_cells_in_cluster(UShort_t s)               {N_cells_in_cluster = s;}
         void set_isExotic(Bool_t b)                           {isExotic = b;}
+        void set_isPHOS(Bool_t b)                             {isPHOS = b;}
+        void set_isEMCal(Bool_t b)                            {isEMCal = b;}
 
         // getters
         TLorentzVector get_TLV_EMCal() const                  { return TLV_EMCal;   }
@@ -53,6 +57,8 @@ public:
         Float_t        get_Dz_to_track() const                { return Dz_to_track;}
         UShort_t       get_N_cells_in_cluster() const         { return N_cells_in_cluster;}
         Bool_t         get_isExotic() const                   { return isExotic;}
+        Bool_t         get_isPHOS() const                     { return isPHOS;}
+        Bool_t         get_isEMCal() const                    { return isEMCal;}
 
 
         ClassDef(StEMCal,1)  //
