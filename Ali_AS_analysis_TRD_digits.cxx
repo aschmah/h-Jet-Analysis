@@ -404,14 +404,9 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
 	JetTrackEvent ->setcent_class_V0CEq(MultSelection->GetMultiplicityPercentile("V0CEq"));
     }
 
-
-    JetTrackEvent->setZDCx(0);
-    JetTrackEvent->setBBCx(0);
-    JetTrackEvent->setvzVpd(0);
-
     JetTrackEvent->setQvecEtaPos(TV2_Qvec);
     JetTrackEvent->setQvecEtaNeg(TV2_Qvec);
-    JetTrackEvent->setcent9(0);
+    JetTrackEvent->setTriggerWord(fESD->GetFiredTriggerClasses());
 
     //-----------------------------------------------------------------
 #if 0
@@ -479,6 +474,7 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
         Double_t Dx_to_track    = clus ->GetTrackDx();
         Double_t Dz_to_track    = clus ->GetTrackDz();
         Bool_t   IsEMCal        = clus ->IsEMCAL();
+        Bool_t   IsPHOS         = clus ->IsPHOS();
         Double_t EMCalChi2      = clus ->Chi2();
         UShort_t NCells         = (UShort_t)clus ->GetNCells();
         Float_t  clusPos[3]={0,0,0};
@@ -494,6 +490,9 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
         JetEMCal ->set_Dz_to_track(Dz_to_track);
         JetEMCal ->set_N_cells_in_cluster(NCells);
         JetEMCal ->set_isExotic(isExotic);
+        JetEMCal ->set_isPHOS(IsPHOS);
+        JetEMCal ->set_isEMCal(IsEMCal);
+
 
         delete clus;
         //printf("i_clus: %d, energy: %4.3f, NCells: %d \n",i_clus,cluster_energy,(Int_t)NCells);
@@ -567,7 +566,7 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
 	ULong_t status = track->GetStatus();
 	Int_t ITS_refit = 0;
         Int_t TPC_refit = 0;
-        Int_t track_status = 0;
+        UShort_t track_status = 0;
 	if(((status & AliVTrack::kITSrefit) == AliVTrack::kITSrefit))
 	{
 	    ITS_refit = 1;
@@ -617,17 +616,19 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
 
 	TLorentzVector TL_vec;
 	TL_vec.SetPtEtaPhiM(Track_pT,Track_eta,Track_phi,0.1349766);
-       
+
 
         JetTrackParticle = JetTrackEvent->createParticle();
         JetTrackParticle ->set_dca_to_prim(((Double_t)charge)*track_total_impact);
-        JetTrackParticle ->set_Particle_m2(0.0);
         JetTrackParticle ->set_Particle_nSigmaPi(Track_PID[2]);
         JetTrackParticle ->set_Particle_nSigmaK(Track_PID[3]);
         JetTrackParticle ->set_Particle_nSigmaP(Track_PID[4]);
-        JetTrackParticle ->set_Particle_qp(0.0);
-        JetTrackParticle ->set_Particle_hits_fit(0);
         JetTrackParticle ->set_TLV_Particle_prim(TL_vec);
+        JetTrackParticle ->setStatus(track_status);
+	JetTrackParticle ->setTPCchi2(TPC_chi2);
+	JetTrackParticle ->setTPCdEdx(TPC_signal);
+	JetTrackParticle ->setTOFsignal(TOF_signal);
+        JetTrackParticle ->setTrack_length(Track_length);
 
 	N_good_tracks++;
 
