@@ -151,7 +151,7 @@ public:
     void  set_Max_pt_down_scale(Double_t imax_pt_down_scale) {emax_pt_down_scale = imax_pt_down_scale;};
     void  set_N_vertex_mult_Psi_bins(Int_t N_z_vertex_bins_set, Int_t N_mult_bins_set, Int_t N_Psi_bins_set) {N_z_vertex_bins = N_z_vertex_bins_set; N_mult_bins = N_mult_bins_set; N_Psi_bins = N_Psi_bins_set;};
     void  SplitTrees();
-    void  MakeJets();
+    void  MakeJets(Int_t graphics);
     Int_t LoopEvent(Int_t LoopEvent, Int_t graphics);
 
     //----------------------------------------------------------------------
@@ -235,6 +235,8 @@ private:
     vector<TEveLine*> vec_TPL3D_helix_hull;
     vector<TEveBox*> vec_eve_TRD_detector_box;
     vector<TEveBox*> vec_eve_EMCal_cluster;
+    vector<TEveBox*> vec_eve_Jets;
+    vector<TEveBox*> vec_eve_tracks_jets;
     //----------------------------------------------------------------------
 
 
