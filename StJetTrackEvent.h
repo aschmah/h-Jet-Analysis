@@ -73,7 +73,6 @@ class StJetTrackParticle : public TObject
 private:
     // Track properties
     TLorentzVector TLV_Particle_prim; // Lorentz vector properties of this particle (primary track)
-    TLorentzVector TLV_Particle_glob; // Lorentz vector properties of this particle (global track)
 
     Float_t        dca_to_prim; // distance of closest approach to mother particle decay vertex (or primary vertex)
     Float_t        Particle_m2;
@@ -81,12 +80,18 @@ private:
     Float_t        Particle_nSigmaK;
     Float_t        Particle_nSigmaP;
     Float_t        Particle_qp;
-    Float_t        Particle_hits_fit;
+
+    UShort_t       status; // status of track: bit 0: ITS refit, bit1: TPC refit
+    Float_t        TPCchi2; // TPC chi2
+    Float_t        TPCdEdx; // Energy loss information of TPC
+    Float_t        TOFsignal; // Time-of-flight
+    Float_t        Track_length; // length of track
 
 public:
     StJetTrackParticle() :
-        TLV_Particle_prim(),TLV_Particle_glob(),dca_to_prim(-1),Particle_m2(-1),Particle_nSigmaPi(-1),
-        Particle_nSigmaK(-1),Particle_nSigmaP(-1),Particle_qp(-1),Particle_hits_fit(-1)
+        TLV_Particle_prim(),dca_to_prim(-1),Particle_m2(-1),Particle_nSigmaPi(-1),
+        Particle_nSigmaK(-1),Particle_nSigmaP(-1),Particle_qp(-1),status(-3),TPCchi2(-3),
+        TPCdEdx(-3),TOFsignal(-3),Track_length(-3)
     {
 
     }
@@ -102,9 +107,14 @@ public:
         void set_Particle_nSigmaK(Float_t f)                { Particle_nSigmaK = f;       }
         void set_Particle_nSigmaP(Float_t f)                { Particle_nSigmaP = f;       }
         void set_Particle_qp(Float_t f)                     { Particle_qp = f;            }
-        void set_Particle_hits_fit(Float_t f)               { Particle_hits_fit = f;      }
         void set_TLV_Particle_prim(TLorentzVector tlv)      { TLV_Particle_prim = tlv;    }
-        void set_TLV_Particle_glob(TLorentzVector tlv)      { TLV_Particle_glob = tlv;    }
+
+        void setStatus(UShort_t s)                          { status = s;                 }
+	void setTPCchi2(Float_t f)                          { TPCchi2 = f;                }
+	void setTPCdEdx(Float_t f)                          { TPCdEdx = f;                }
+	void setTOFsignal(Float_t f)                        { TOFsignal = f;              }
+        void setTrack_length(Float_t f)                     { Track_length = f;           }
+      
 
         // getters
         Float_t get_dca_to_prim()              const        { return dca_to_prim;         }
@@ -113,9 +123,14 @@ public:
         Float_t get_Particle_nSigmaK()         const        { return Particle_nSigmaK;    }
         Float_t get_Particle_nSigmaP()         const        { return Particle_nSigmaP;    }
         Float_t get_Particle_qp()              const        { return Particle_qp;         }
-        Float_t get_Particle_hits_fit()        const        { return Particle_hits_fit;   }
         TLorentzVector get_TLV_Particle_prim() const        { return TLV_Particle_prim;   }
-        TLorentzVector get_TLV_Particle_glob() const        { return TLV_Particle_glob;   }
+
+        UShort_t getStatus()                   const        { return status;              }
+        Float_t  getTPCchi2()                  const        { return TPCchi2;             }
+	Float_t  getTPCdEdx()                  const        { return TPCdEdx;             }
+	Float_t  getTOFsignal()                const        { return TOFsignal;           }
+        Float_t  getTrack_length()             const        { return Track_length;        }
+  
 
 
         ClassDef(StJetTrackParticle,1)  // A simple track of a particle
@@ -138,10 +153,6 @@ private:
     Int_t   n_tof_hits;
     Int_t   SE_ME_flag;
 
-    Float_t ZDCx;
-    Float_t BBCx;
-    Float_t vzVpd;
-
     TVector2 QvecEtaPos;
     TVector2 QvecEtaNeg;
 
@@ -160,7 +171,6 @@ private:
     Float_t BeamIntAA; // ZDC coincidence rate
     Float_t T0zVertex; // z-vertex position from VPD
 
-    Int_t cent9;
     TString TriggerWord; // Trigger word
 
     UShort_t      fNumParticle;
@@ -172,9 +182,9 @@ private:
 public:
     StJetTrackEvent() :
         x(-1),y(-1),z(-1),id(-1),mult(0),n_prim(0),n_TRD_tracklets(0),
-        n_tof_hits(0),SE_ME_flag(-1),ZDCx(-1),BBCx(-1),vzVpd(-1),QvecEtaPos(),QvecEtaNeg(),
+        n_tof_hits(0),SE_ME_flag(-1),QvecEtaPos(),QvecEtaNeg(),
         cent_class_ZNA(0),cent_class_ZNC(0),cent_class_V0A(0),cent_class_V0C(0),cent_class_V0M(0),cent_class_CL0(0),cent_class_CL1(0),
-        cent_class_SPD(0),cent_class_V0MEq(0),cent_class_V0AEq(0),cent_class_V0CEq(0),BeamIntAA(-1),T0zVertex(-1),cent9(0),
+        cent_class_SPD(0),cent_class_V0MEq(0),cent_class_V0AEq(0),cent_class_V0CEq(0),BeamIntAA(-1),T0zVertex(-1),
         TriggerWord(),fNumParticle(0),fNumEMCal(0)
     {
         fParticle      = new TClonesArray( "StJetTrackParticle", 10 );
@@ -213,23 +223,11 @@ public:
         void       setSE_ME_flag(Int_t r)             { SE_ME_flag = r;                }
         Int_t      getSE_ME_flag() const              { return SE_ME_flag;             }
 
-        void       setZDCx(Float_t r)                 { ZDCx = r;                      }
-        Float_t    getZDCx() const                    { return ZDCx;                   }
-
-        void       setBBCx(Float_t r)                 { BBCx = r;                      }
-        Float_t    getBBCx() const                    { return BBCx;                   }
-
-        void       setvzVpd(Float_t r)                { vzVpd = r;                     }
-        Float_t    getvzVpd() const                   { return vzVpd;                  }
-
         void       setQvecEtaPos(TVector2 vec)        { QvecEtaPos = vec;              }
         TVector2   getQvecEtaPos() const              { return QvecEtaPos;             }
 
         void       setQvecEtaNeg(TVector2 vec)        { QvecEtaNeg = vec;              }
         TVector2   getQvecEtaNeg() const              { return QvecEtaNeg;             }
-
-        void       setcent9(Int_t r)                  { cent9 = r;                     }
-        Int_t      getcent9() const                   { return cent9;                  }
 
         void       setcent_class_ZNA(Float_t r)             { cent_class_ZNA = r;                }
 	Float_t      getcent_class_ZNA() const              { return cent_class_ZNA;             }
