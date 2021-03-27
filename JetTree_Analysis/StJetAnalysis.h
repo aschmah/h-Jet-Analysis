@@ -151,8 +151,11 @@ public:
     void  set_Max_pt_down_scale(Double_t imax_pt_down_scale) {emax_pt_down_scale = imax_pt_down_scale;};
     void  set_N_vertex_mult_Psi_bins(Int_t N_z_vertex_bins_set, Int_t N_mult_bins_set, Int_t N_Psi_bins_set) {N_z_vertex_bins = N_z_vertex_bins_set; N_mult_bins = N_mult_bins_set; N_Psi_bins = N_Psi_bins_set;};
     void  SplitTrees();
-    void  MakeJets(Int_t graphics);
+    void  MakeJets(Int_t graphics, Int_t ME_flag);
+    void  MakeME(Int_t i_ME_mult_bin, Int_t i_ME_EP_bin);
+    Double_t MakeEventPlane();
     Int_t LoopEvent(Int_t LoopEvent, Int_t graphics);
+    void  setMultHist(TString iMultHistName) {eMultHistName = iMultHistName;}
 
     //----------------------------------------------------------------------
     // Function for track reconstruction efficiency
@@ -186,10 +189,14 @@ private:
     vector< vector< vector<TFile*> > >           vec_Outputfiles;
     TFile* outputfile_jet;
 
+    TVector3 Qvec_eta_pos, Qvec_eta_neg;
+    vector< vector<TVector3> > vec_TV3_Qvec_eta;
+    Double_t Psi_full_global;
+
     vector<PseudoJet> vec_PJ_particles;
     Int_t eflab_prim_glob, eRem_n_hardest;
     Double_t eJet_R, eBkg_R, emax_pt_down_scale;
-    TString eSuffix, InListDir, GeomDir;
+    TString eSuffix, InListDir, GeomDir, eMultHistName;
     Double_t ePYTHIA_eff_factor;
     Int_t ez_bin, emult_bin, ePsi_bin, eCentrality;
     TString eOutdir, eSampleHist, eSE_Et_Hist, eME_Et_Hist;
@@ -211,7 +218,25 @@ private:
     StEMCal             *JetEMCalParticle;
     StJetTrackParticle  *JetTrackParticle_Fill;
 
-    TH1D* h_jet_sub;
+    vector<Int_t> vec_ME_mult_bins; // multiplicity
+    vector<Int_t> vec_ME_EP_bins; // event plane
+    vector< vector< vector<Int_t> > > vec_ME_event_index_mult;
+
+    TH2D* h2D_dEdx_vs_p;
+    TH1D* h_jet_sub_SE;
+    TH1D* h_jet_sub_ME;
+    TH1D* h_jet_SE;
+    TH1D* h_jet_ME;
+    TH1D* h_rho_sub_SE;
+    TH1D* h_rho_sub_ME;
+    TH1D* h_area_sub_SE;
+    TH1D* h_area_sub_ME;
+    TH1D* h_mult_particles;
+    TH1D* h_input_mult_hist;
+    vector<TH1D*> vec_h_input_mult_hist;
+    TH2D* h2D_Psi_pos_vs_Psi_neg;
+    TH2D* h2D_jet_SE_vs_dPsi_phi;
+    TH1D* h_Psi_full;
 
     //----------------------------------------------------------------------
     // Parameters for track reconstruction efficiency

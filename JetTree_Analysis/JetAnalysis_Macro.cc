@@ -140,7 +140,7 @@ void JetAnalysis_Macro(Int_t event_plot, TString suffix, Int_t BeamTime_num, Int
 
     //---------------------------------------------------------------
     Int_t beamtime   = 1;
-    Int_t graphics   = 1;
+    Int_t graphics   = 0;
     //Int_t event_plot = 0; // -1 = all events
     StJetAnalysis_Ana->set_N_vertex_mult_Psi_bins(2,2,2);
     StJetAnalysis_Ana->setInListDir("File_lists/");
@@ -152,12 +152,14 @@ void JetAnalysis_Macro(Int_t event_plot, TString suffix, Int_t BeamTime_num, Int
             StJetAnalysis_Ana->setInputDir("./Data/");
             StJetAnalysis_Ana->setOutdir("./Data/Jet_histos/");
             StJetAnalysis_Ana->setGeomDir("./Data/");
+            StJetAnalysis_Ana->setMultHist("./Data/Mult_hist.root");
         }
         if(beamtime == 1)
         {
             StJetAnalysis_Ana->setInputDir("./Data/");
             StJetAnalysis_Ana->setOutdir("./Data/Jet_histos/");
             StJetAnalysis_Ana->setGeomDir("./Data/");
+            StJetAnalysis_Ana->setMultHist("./Data/Mult_hist.root");
         }
     }
     else // HD
@@ -183,8 +185,8 @@ void JetAnalysis_Macro(Int_t event_plot, TString suffix, Int_t BeamTime_num, Int
     StJetAnalysis_Ana->InitJet();
     Long64_t Number_of_events = StJetAnalysis_Ana->ReadData();
 
-    StJetAnalysis_Ana->setJet_R(0.4);
-    StJetAnalysis_Ana->setBkg_R(0.3);
+    StJetAnalysis_Ana->setJet_R(Jet_R);
+    StJetAnalysis_Ana->setBkg_R(Bkg_R);
     StJetAnalysis_Ana->setRem_n_hardest(Rem_n_hardest);
     //StJetAnalysis_Ana->LoopEvent(11);
 
