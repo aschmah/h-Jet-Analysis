@@ -365,6 +365,14 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
     //-----------------------------------------------------------------
 
 
+    // store only 0-10%
+    AliMultSelection *MultSelection = (AliMultSelection*) fESD->FindListObject("MultSelection");
+    if(MultSelection)
+    {
+        if(MultSelection->GetMultiplicityPercentile("V0M") > 10.0) return;
+    }
+    else return;
+
 
     Int_t SE_ME_Flag = 0;
 
@@ -386,7 +394,6 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
     JetTrackEvent ->setBeamIntAA(MeanBeamIntAA);
     JetTrackEvent ->setT0zVertex(T0zVertex);
 
-    AliMultSelection *MultSelection = (AliMultSelection*) fESD->FindListObject("MultSelection");
     if(MultSelection)
     {
 	// V0MEq, V0AEq, V0CEq, SPDTracklets
@@ -407,6 +414,8 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
     JetTrackEvent->setQvecEtaPos(TV2_Qvec);
     JetTrackEvent->setQvecEtaNeg(TV2_Qvec);
     JetTrackEvent->setTriggerWord(fESD->GetFiredTriggerClasses());
+
+
 
     //-----------------------------------------------------------------
 #if 0
@@ -598,7 +607,8 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
 
 
 	Float_t track_xy_impact,track_z_impact;
-	track->GetImpactParameters(track_xy_impact,track_z_impact);
+        track->GetImpactParameters(track_xy_impact,track_z_impact);  // signed dcas
+        //printf("track_xy_impact: %4.3f, track_z_impact: %4.3f \n",track_xy_impact,track_z_impact);
 	Double_t track_total_impact = TMath::Sqrt(track_xy_impact*track_xy_impact + track_z_impact*track_z_impact);
 
 
@@ -617,15 +627,16 @@ void Ali_AS_analysis_TRD_digits::UserExec(Option_t *)
 	TLorentzVector TL_vec;
 	TL_vec.SetPtEtaPhiM(Track_pT,Track_eta,Track_phi,0.1349766);
 
+        //printf("TPC_chi2: %4.3f \n",TPC_chi2);
 
         JetTrackParticle = JetTrackEvent->createParticle();
-        JetTrackParticle ->set_dca_to_prim(((Double_t)charge)*track_total_impact);
-        JetTrackParticle ->set_Particle_nSigmaPi(Track_PID[2]);
-        JetTrackParticle ->set_Particle_nSigmaK(Track_PID[3]);
-        JetTrackParticle ->set_Particle_nSigmaP(Track_PID[4]);
+        JetTrackParticle ->set_dca_to_prim(track_xy_impact,track_z_impact);
+        //JetTrackParticle ->set_Particle_nSigmaPi(Track_PID[2]);
+        //JetTrackParticle ->set_Particle_nSigmaK(Track_PID[3]);
+        //JetTrackParticle ->set_Particle_nSigmaP(Track_PID[4]);
         JetTrackParticle ->set_TLV_Particle_prim(TL_vec);
         JetTrackParticle ->setStatus(track_status);
-	JetTrackParticle ->setTPCchi2(TPC_chi2);
+	JetTrackParticle ->setTPCchi2(((Double_t)charge)*TPC_chi2);
 	JetTrackParticle ->setTPCdEdx(TPC_signal);
 	JetTrackParticle ->setTOFsignal(TOF_signal);
         JetTrackParticle ->setTrack_length(Track_length);

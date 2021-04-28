@@ -74,7 +74,8 @@ private:
     // Track properties
     TLorentzVector TLV_Particle_prim; // Lorentz vector properties of this particle (primary track)
 
-    Float_t        dca_to_prim; // distance of closest approach to mother particle decay vertex (or primary vertex)
+    Float_t        dca_to_prim_xy; // distance of closest approach to mother particle decay vertex (or primary vertex)
+    Float_t        dca_to_prim_z; // distance of closest approach to mother particle decay vertex (or primary vertex)
     //Float_t        Particle_m2;
     //Float_t        Particle_nSigmaPi;
     //Float_t        Particle_nSigmaK;
@@ -89,7 +90,7 @@ private:
 
 public:
     StJetTrackParticle() :
-        TLV_Particle_prim(),dca_to_prim(-1),
+        TLV_Particle_prim(),dca_to_prim_xy(-1),dca_to_prim_z(-1),
         //Particle_m2(-1),Particle_nSigmaPi(-1),Particle_nSigmaK(-1),Particle_nSigmaP(-1),Particle_qp(-1),
         status(-3),TPCchi2(-3),
         TPCdEdx(-3),TOFsignal(-3),Track_length(-3)
@@ -102,7 +103,7 @@ public:
         }
 
         // setters
-        void set_dca_to_prim(Float_t f)                     { dca_to_prim = f;            }
+        void set_dca_to_prim(Float_t f1, Float_t f2)                     { dca_to_prim_xy = f1; dca_to_prim_z = f2;           }
         //void set_Particle_m2(Float_t f)                     { Particle_m2 = f;            }
         //void set_Particle_nSigmaPi(Float_t f)               { Particle_nSigmaPi = f;      }
         //void set_Particle_nSigmaK(Float_t f)                { Particle_nSigmaK = f;       }
@@ -118,7 +119,8 @@ public:
       
 
         // getters
-        Float_t get_dca_to_prim()              const        { return dca_to_prim;         }
+        Float_t get_dca_to_prim_xy()              const        { return dca_to_prim_xy;         }
+        Float_t get_dca_to_prim_z()              const        { return dca_to_prim_z;         }
         //Float_t get_Particle_m2 ()             const        { return Particle_m2;         }
         //Float_t get_Particle_nSigmaPi()        const        { return Particle_nSigmaPi;   }
         //Float_t get_Particle_nSigmaK()         const        { return Particle_nSigmaK;    }
